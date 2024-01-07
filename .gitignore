@@ -1,2 +1,3 @@
-__pycache__/
-/data.pth
+basic/__pycache__/
+basic/data.pth
+bot2/data/
