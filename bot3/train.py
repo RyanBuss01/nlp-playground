@@ -6,31 +6,22 @@ from torch import nn
 num_epochs = 1000
 batch_size = 8
 learning_rate = 0.001
-hidden_size = 8
+hidden_size = 8 # try 32?
+input_size = 768  # Size of BERT embeddings
+output_size = 768 
 
-def load_lines(filename):
-    lines = {}
-    with open(filename, 'r', encoding='iso-8859-1') as file:
-        for line in file:
-            parts = line.split(" +++$+++ ")
-            if len(parts) == 5:
-                lines[parts[0]] = parts[4].strip()
-    return lines
-
-lines = load_lines("movie_lines.txt")  # Replace with your file path
-
-def load_conversations(filename, lines):
+def load_conversations(filename):
     conversations = []
     with open(filename, 'r', encoding='iso-8859-1') as file:
         for line in file:
-            parts = line.split(" +++$+++ ")
-            if len(parts) == 4:
-                line_ids = eval(parts[3])
-                conversation = [lines[line_id] for line_id in line_ids]
-                conversations.append(conversation)
+            # Splitting the line by tab character
+            parts = line.strip().split("\t")
+            if len(parts) == 2:
+                conversations.append((parts[0], parts[1]))
     return conversations
 
-conversations = load_conversations("movie_conversations.txt", lines)  # Replace with your file path
+filename = "bot3/movie-corpus/formatted_movie_lines.txt"  # Replace with your actual file name
+conversations = load_conversations(filename)
 
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -71,9 +62,6 @@ for conversation in conversations:
         target_embedding = extract_bert_embedding(conversation[i + 1], tokenizer, bert_model)
         X_train.append(input_embedding)
         y_train.append(target_embedding)
-
-input_size = 768  # Size of BERT embeddings
-output_size = 768 
 
 model = MyNLPModel(input_size, hidden_size, output_size)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
