@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 from transformers import BertTokenizer, BertModel
 from torch import nn
+from model import MyNLPModel
 
 num_epochs = 1000
 batch_size = 8
@@ -25,25 +26,6 @@ conversations = load_conversations(filename)
 
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
-
-class MyNLPModel(nn.Module):
-    def __init__(self, input_size, hidden_size, num_classes):
-        super(MyNLPModel, self).__init__()
-        self.l1 = nn.Linear(input_size, hidden_size) 
-        self.l2 = nn.Linear(hidden_size, hidden_size) 
-        self.l3 = nn.Linear(hidden_size, num_classes)
-        self.relu = nn.ReLU()
-    
-    def forward(self, x):
-        out = self.l1(x)
-        out = self.relu(out)
-        out = self.l2(out)
-        out = self.relu(out)
-        out = self.l3(out)
-        # no activation and no softmax at the end
-        return out
-
 bert_model = BertModel.from_pretrained('bert-base-uncased')    
 
 def extract_bert_embedding(sentence, tokenizer, bert_model):
@@ -65,7 +47,7 @@ for conversation in conversations:
 
 model = MyNLPModel(input_size, hidden_size, output_size)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-criterion = nn.MSELoss() 
+criterion = nn.MSELoss(len(conversation)) 
 
 # Convert X_train and y_train to PyTorch tensors
 X_train_tensor = torch.stack(X_train)  # Use torch.stack to create a tensor from a list of tensors
@@ -84,5 +66,6 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        print(epoch, "of", num_epochs)
 
 torch.save(model.state_dict(), 'model.pth')
