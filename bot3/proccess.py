@@ -9,7 +9,7 @@
 import torch
 from transformers import BertTokenizer, BertModel
 
-batch_size = 32
+batch_size = 256
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -31,7 +31,7 @@ def load_conversations(filename):
 filename = "bot3/movie-corpus/formatted_movie_lines.txt"  # Replace with your actual file name
 conversations = load_conversations(filename)
 
-def batch_extract_bert_embedding(sentences, tokenizer, bert_model, device, batch_size=32):
+def batch_extract_bert_embedding(sentences, tokenizer, bert_model, device):
     # Process sentences in batches
     all_embeddings = []
     for i in range(0, len(sentences), batch_size):
@@ -43,6 +43,7 @@ def batch_extract_bert_embedding(sentences, tokenizer, bert_model, device, batch
             outputs = bert_model(**inputs)
             embeddings = outputs.last_hidden_state[:, 0, :].cpu()  # Move the embeddings back to CPU
             all_embeddings.extend(embeddings)
+        print(f"\r Batch {i+1} of {len(sentences)}", end="")
 
     return all_embeddings
 
@@ -66,7 +67,7 @@ y_train = target_embeddings
 X_train_tensor = torch.stack(X_train)  # Use torch.stack to create a tensor from a list of tensors
 y_train_tensor = torch.stack(y_train)
 
-torch.save(X_train_tensor, 'bot3/data/X_train_tensor.pt')
-torch.save(y_train_tensor, 'bot3/data/y_train_tensor.pt')
+torch.save(X_train_tensor, f'bot3/data/X_train_tensor_{batch_size}.pt')
+torch.save(y_train_tensor, f'bot3/data/y_train_tensor{batch_size}.pt')
 
 print(f"\rSaved tensors !!")

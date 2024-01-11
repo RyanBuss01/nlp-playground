@@ -16,9 +16,9 @@ from torch.cuda.amp import GradScaler, autocast
 import torch.multiprocessing as mp
 
 num_epochs = 1000
-batch_size = 32
+batch_size = 256
 learning_rate = 0.001
-hidden_size = 32 # try 32?
+hidden_size = 256 # try 32?
 input_size = 768  # Size of BERT embeddings
 output_size = 768 
 
@@ -34,27 +34,31 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.MSELoss() 
 
 # Load X_train_tensor and y_train_tensor from files
-X_train_tensor = torch.load('bot3/data/X_train_tensor.pt')
-y_train_tensor = torch.load('bot3/data/y_train_tensor.pt')
+X_train_tensor = torch.load(f'bot3/data/X_train_tensor_{batch_size}.pt')
+y_train_tensor = torch.load(f'bot3/data/y_train_tensor_{batch_size}.pt')
 
 # DataLoader
 train_data = TensorDataset(X_train_tensor, y_train_tensor)
 train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=4)
 
+def train():
+    # Training loop
+    for epoch in range(num_epochs):
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device) 
 
-# Training loop
-for epoch in range(num_epochs):
-    for inputs, labels in train_loader:
-        inputs, labels = inputs.to(device), labels.to(device) 
+            optimizer.zero_grad()
 
-        optimizer.zero_grad()
-
-        with autocast():
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+            with autocast():
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
         print(f"\rEpoch {epoch+1} of {num_epochs}, Loss: {loss.item()}")
+        
+
+if __name__ == '__main__':
+    train()
 
 torch.save(model.state_dict(), 'bot3/data/model.pth')
