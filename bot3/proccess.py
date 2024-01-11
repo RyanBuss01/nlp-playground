@@ -13,7 +13,7 @@ output_size = 768
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-bert_model = BertTokenizer.from_pretrained('bert-base-uncased').to(device)
+bert_model = BertModel.from_pretrained('bert-base-uncased').to(device)
 
 
 def load_conversations(filename):
