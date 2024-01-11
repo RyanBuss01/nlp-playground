@@ -37,8 +37,11 @@ def extract_bert_embedding(sentence, tokenizer, bert_model):
 # Prepare X_train and y_train
 X_train = []
 y_train = []
+j=0
 
 for conversation in conversations:
+    j+=1
+    print(str(j) + " of " + str(len(conversations)))
     for i in range(len(conversation) - 1):
         input_embedding = extract_bert_embedding(conversation[i], tokenizer, bert_model)
         target_embedding = extract_bert_embedding(conversation[i + 1], tokenizer, bert_model)
