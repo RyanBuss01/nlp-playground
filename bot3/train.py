@@ -13,7 +13,9 @@ output_size = 768
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = MyNLPModel(input_size, hidden_size, output_size)
+# Initialize your model and move it to the device (GPU or CPU)
+model = MyNLPModel(input_size, hidden_size, output_size).to(device)
+
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.MSELoss() 
 
@@ -37,6 +39,6 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print(epoch, "of", num_epochs)
+        print(f"Epoch {epoch+1} of {num_epochs}, Loss: {loss.item()}")
 
 torch.save(model.state_dict(), 'bot3/data/model.pth')
