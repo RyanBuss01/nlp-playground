@@ -9,7 +9,7 @@
 import torch
 from transformers import BertTokenizer, BertModel
 
-batch_size = 8
+batch_size = 32
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
