@@ -11,6 +11,8 @@ hidden_size = 8 # try 32?
 input_size = 768  # Size of BERT embeddings
 output_size = 768 
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 model = MyNLPModel(input_size, hidden_size, output_size)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.MSELoss() 
@@ -26,6 +28,9 @@ train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=Tru
 # Training loop
 for epoch in range(num_epochs):
     for inputs, labels in train_loader:
+        inputs, labels = inputs.to(device), labels.to(device) 
+
+        # training step
         outputs = model(inputs)
         loss = criterion(outputs, labels)
 
