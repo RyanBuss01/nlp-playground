@@ -1,14 +1,16 @@
+##############################################################################################################
+#
+#   This script is used to preproccess the data for the chatbot bot model.
+#   It is used to create the X_train_tensor and y_train_tensor files.
+#
+#   Updated for GPU usage.
+#
+##############################################################################################################
 import torch
-from torch import nn
 from transformers import BertTokenizer, BertModel
 
-
-num_epochs = 1000
 batch_size = 8
-learning_rate = 0.001
-hidden_size = 8 # try 32?
-input_size = 768  # Size of BERT embeddings
-output_size = 768 
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -29,28 +31,35 @@ def load_conversations(filename):
 filename = "bot3/movie-corpus/formatted_movie_lines.txt"  # Replace with your actual file name
 conversations = load_conversations(filename)
 
+def batch_extract_bert_embedding(sentences, tokenizer, bert_model, device, batch_size=32):
+    # Process sentences in batches
+    all_embeddings = []
+    for i in range(0, len(sentences), batch_size):
+        batch_sentences = sentences[i:i + batch_size]
+        inputs = tokenizer(batch_sentences, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        inputs = {k: v.to(device) for k, v in inputs.items()}  # Move input to GPU
 
-def extract_bert_embedding(sentence, tokenizer, bert_model, device):
-    inputs = tokenizer(sentence, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    inputs = {k: v.to(device) for k, v in inputs.items()}  # Move input to GPU
-    with torch.no_grad():
-        outputs = bert_model(**inputs)
-    return outputs.last_hidden_state[:, 0, :].cpu()  # Move the embeddings back to CPU
+        with torch.no_grad():
+            outputs = bert_model(**inputs)
+            embeddings = outputs.last_hidden_state[:, 0, :].cpu()  # Move the embeddings back to CPU
+            all_embeddings.extend(embeddings)
+
+    return all_embeddings
+
+# Assuming conversations is a list of (input, target) tuples
+input_sentences = [conv[0] for conv in conversations]
+target_sentences = [conv[1] for conv in conversations]
+
+# Batch extract embeddings
+input_embeddings = batch_extract_bert_embedding(input_sentences, tokenizer, bert_model, device)
+target_embeddings = batch_extract_bert_embedding(target_sentences, tokenizer, bert_model, device)
+
+# Ensure that input_embeddings and target_embeddings have the same length
+assert len(input_embeddings) == len(target_embeddings)
 
 # Prepare X_train and y_train
-X_train = []
-y_train = []
-j=0
-
-for conversation in conversations:
-    for i in range(len(conversation) - 1):
-        input_embedding = extract_bert_embedding(conversation[i], tokenizer, bert_model, device)
-        target_embedding = extract_bert_embedding(conversation[i + 1], tokenizer, bert_model, device)
-        X_train.append(input_embedding)
-        y_train.append(target_embedding)
-    j+=1
-    print(str(j) + " of " + str(len(conversations)))
-
+X_train = input_embeddings
+y_train = target_embeddings
 
 
 # Convert X_train and y_train to PyTorch tensors
@@ -59,3 +68,5 @@ y_train_tensor = torch.stack(y_train)
 
 torch.save(X_train_tensor, 'bot3/data/X_train_tensor.pt')
 torch.save(y_train_tensor, 'bot3/data/y_train_tensor.pt')
+
+print(f"\rSaved tensors !!")

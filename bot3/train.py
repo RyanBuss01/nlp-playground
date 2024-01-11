@@ -39,6 +39,6 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print(f"Epoch {epoch+1} of {num_epochs}, Loss: {loss.item()}")
+        print(f"\rEpoch {epoch+1} of {num_epochs}, Loss: {loss.item()}")
 
 torch.save(model.state_dict(), 'bot3/data/model.pth')
