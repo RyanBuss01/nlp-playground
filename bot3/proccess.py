@@ -68,6 +68,6 @@ X_train_tensor = torch.stack(X_train)  # Use torch.stack to create a tensor from
 y_train_tensor = torch.stack(y_train)
 
 torch.save(X_train_tensor, f'bot3/data/X_train_tensor_{batch_size}.pt')
-torch.save(y_train_tensor, f'bot3/data/y_train_tensor{batch_size}.pt')
+torch.save(y_train_tensor, f'bot3/data/y_train_tensor_{batch_size}.pt')
 
 print(f"\rSaved tensors !!")

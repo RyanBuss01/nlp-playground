@@ -56,9 +56,12 @@ def train():
             scaler.step(optimizer)
             scaler.update()
         print(f"\rEpoch {epoch+1} of {num_epochs}, Loss: {loss.item()}")
+        if(epoch % 100 == 0):
+            print("Saving model...")
+            torch.save(model.state_dict(), f'bot3/models/model_{epoch}.pt')
         
 
 if __name__ == '__main__':
     train()
 
-torch.save(model.state_dict(), 'bot3/data/model.pth')
+
